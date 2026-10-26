@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Worksheet Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+    </style>
+</head>
+<body class="bg-indigo-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white text-center">
+            <h1 class="text-2xl md:text-3xl font-bold">📝 AI Worksheet Generator</h1>
+            <p class="text-indigo-100 mt-1">สร้างใบงานสุดสร้างสรรค์ด้วย AI ขนาด 3:4 พร้อมดาวน์โหลด</p>
+        </div>
+
+        <div class="p-6 md:p-8 space-y-6">
+            <!-- API Key Setting -->
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <label class="block text-sm font-semibold text-amber-800 mb-1">🔑 Gemini API Key (จำเป็นสำหรับการสร้างภาพบน GitHub)</label>
+                <div class="flex gap-2">
+                    <input type="password" id="apiKeyInput" placeholder="วาง Gemini API Key ที่นี่..." class="flex-1 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                    <button onclick="saveApiKey()" class="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-700 transition">บันทึก Key</button>
+                </div>
+                <p class="text-xs text-amber-600 mt-1">Key จะถูกบันทึกไว้ในเบราว์เซอร์ของพระเปอร์เท่านั้น ไม่รั่วไหลแน่นอนค่ะ</p>
+            </div>
+
+            <!-- Form Controls -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">📚 วิชา</label>
+                    <input type="text" id="subject" placeholder="เช่น คณิตศาสตร์, วิทยาศาสตร์, ภาษาไทย" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">🎓 ชั้นเรียน</label>
+                    <select id="grade" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="อนุบาล 3">อนุบาล 3</option>
+                        <option value="ประถมศึกษาปีที่ 1">ประถมศึกษาปีที่ 1</option>
+                        <option value="ประถมศึกษาปีที่ 2" selected>ประถมศึกษาปีที่ 2</option>
+                        <option value="ประถมศึกษาปีที่ 3">ประถมศึกษาปีที่ 3</option>
+                        <option value="ประถมศึกษาปีที่ 4">ประถมศึกษาปีที่ 4</option>
+                        <option value="ประถมศึกษาปีที่ 5">ประถมศึกษาปีที่ 5</option>
+                        <option value="ประถมศึกษาปีที่ 6">ประถมศึกษาปีที่ 6</option>
+                        <option value="มัธยมศึกษาปีที่ 1">มัธยมศึกษาปีที่ 1</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">🎨 สไตล์ / ธีม</label>
+                    <input type="text" id="style" placeholder="เช่น น่ารักมินิมอล, การ์ตูนสัตว์ป่า, สดใสสีพาสเทล" value="น่ารักสดใส มินิมอล" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">🧩 รูปแบบ Worksheet</label>
+                    <select id="worksheetType" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="จับคู่คำตอบ (Matching)">จับคู่คำตอบ (Matching)</option>
+                        <option value="ปรนัย / กากบาท (Multiple Choice)">ปรนัย / กากบาท (Multiple Choice)</option>
+                        <option value="เติมคำในช่องว่าง (Fill in the blanks)">เติมคำในช่องว่าง (Fill in the blanks)</option>
+                        <option value="ระบายสีและนับจำนวน (Color & Count)">ระบายสีและนับจำนวน (Color & Count)</option>
+                        <option value="โจทย์ปัญหาฝึกสมอง (Word Problems)">โจทย์ปัญหาฝึกสมอง (Word Problems)</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">⚖️ ระดับความยาก</label>
+                    <select id="difficulty" class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="ง่ายมาก (Very Easy)">ง่ายมาก (Very Easy)</option>
+                        <option value="ง่าย (Easy)" selected>ง่าย (Easy)</option>
+                        <option value="ปานกลาง (Medium)">ปานกลาง (Medium)</option>
+                        <option value="ยาก / ท้าทาย (Hard)">ยาก / ท้าทาย (Hard)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button onclick="generateWorksheet()" id="generateBtn" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2">
+                <span>✨ สร้าง Worksheet (สัดส่วน 3:4)</span>
+            </button>
+
+            <!-- Loading State -->
+            <div id="loading" class="hidden text-center py-10 space-y-3">
+                <div class="inline-block w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-gray-600 font-medium">กำลังให้ AI ออกแบบและสร้างใบงานขนาด 3:4 รอสักครู่นะคะ...</p>
+            </div>
+
+            <!-- Result Section -->
+            <div id="resultContainer" class="hidden space-y-4 border-t pt-6">
+                <h3 class="font-bold text-lg text-gray-800 text-center">🎯 ผลลัพธ์ Worksheet ของพระเปอร์</h3>
+                <div class="flex justify-center bg-gray-50 p-4 rounded-xl border">
+                    <img id="outputImage" src="" alt="Worksheet" class="max-w-full h-auto rounded-lg shadow-md" style="aspect-ratio: 3/4; object-fit: contain;">
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="downloadImage()" class="flex-1 bg-emerald-600 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-emerald-700 transition text-center">📥 ดาวน์โหลดรูปภาพ (PNG)</button>
+                    <button onclick="downloadPDF()" class="flex-1 bg-rose-600 text-white font-semibold py-2.5 px-4 rounded-xl hover:bg-rose-700 transition text-center">📄 ดาวน์โหลดเป็นไฟล์ PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // โหลด API Key ที่เคยบันทึกไว้
+        window.onload = function() {
+            const savedKey = localStorage.getItem('gemini_api_key');
+            if (savedKey) {
+                document.getElementById('apiKeyInput').value = savedKey;
+            }
+        };
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key) {
+                localStorage.setItem('gemini_api_key', key);
+                alert('บันทึก API Key เรียบร้อยแล้วค่ะ!');
+            } else {
+                alert('กรุณากรอก API Key ก่อนบันทึกค่ะ');
+            }
+        }
+
+        let currentImageUrl = '';
+
+        async function generateWorksheet() {
+            const apiKey = localStorage.getItem('gemini_api_key') || document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                alert('กรุณากรอกและบันทึก Gemini API Key ก่อนสร้าง Worksheet ค่ะ!');
+                return;
+            }
+
+            const subject = document.getElementById('subject').value || 'ทั่วไป';
+            const grade = document.getElementById('grade').value;
+            const style = document.getElementById('style').value;
+            const worksheetType = document.getElementById('worksheetType').value;
+            const difficulty = document.getElementById('difficulty').value;
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('resultContainer').classList.add('hidden');
+            document.getElementById('generateBtn').disabled = true;
+
+            const promptText = `Create a clean, high-quality educational worksheet sheet for school students. Subject: ${subject}, Grade level: ${grade}, Style/Theme: ${style}, Worksheet Format: ${worksheetType}, Difficulty: ${difficulty}. The image aspect ratio must be strictly 3:4 portrait. Include a clear header area with placeholders for Name, Class, and Student ID. The content must be in Thai language, beautifully formatted with clear instructions, exercises, and cute decorative educational illustrations suitable for the theme. Professional worksheet layout design.`;
+
+            try {
+                // เรียกใช้ Imagen / Gemini Flash Image ผ่าน REST API ตรงจากเบราว์เซอร์
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }],
+                        generationConfig: { responseModalities: ["IMAGE", "TEXT"] }
+                    })
+                });
+
+                const data = await response.json();
+                
+                // ค้นหาภาพจากผลลัพธ์
+                let imageBase64 = null;
+                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+                    for (const part of data.candidates[0].content.parts) {
+                        if (part.inlineData && part.inlineData.mimeType.startsWith('image/')) {
+                            imageBase64 = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                            break;
+                        }
+                    }
+                }
+
+                if (imageBase64) {
+                    currentImageUrl = imageBase64;
+                    document.getElementById('outputImage').src = currentImageUrl;
+                    document.getElementById('resultContainer').classList.remove('hidden');
+                } else {
+                    // หากรุ่นนี้ส่งคืนเป็น Text หรือรูปแบบอื่น ให้แจ้งเตือน
+                    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'ไม่พบข้อมูลรูปภาพ';
+                    alert('AI ตอบกลับมา แต่ไม่พบรูปภาพ: ' + textResponse);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อกับ API กรุณาตรวจสอบ API Key อีกครั้งค่ะ');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('generateBtn').disabled = false;
+            }
+        }
+
+        function downloadImage() {
+            if (!currentImageUrl) return;
+            const link = document.createElement('a');
+            link.href = currentImageUrl;
+            link.download = 'worksheet-3-4.png';
+            link.click();
+        }
+
+        function downloadPDF() {
+            if (!currentImageUrl) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            // ขนาดหน้า A4 คือ 210 x 297 mm
+            // สัดส่วน 3:4 แปลงลง A4 (กว้าง 180 มม. สูง 240 มม.)
+            doc.addImage(currentImageUrl, 'PNG', 15, 15, 180, 240);
+            doc.save('worksheet.pdf');
+        }
+    </script>
+</body>
+</html>
